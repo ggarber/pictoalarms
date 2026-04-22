@@ -1,0 +1,45 @@
+# ========================
+# Next.js / Web (web/)
+# ========================
+web/node_modules
+web/.pnp
+web/.pnp.js
+web/.yarn/install-state.gz
+web/coverage
+web/.next/
+web/out/
+web/build
+web/.vercel
+web/*.tsbuildinfo
+web/next-env.d.ts
+web/.vscode
+web/postgres_data/
+web/.env
+web/.env*.local
+web/npm-debug.log*
+web/yarn-debug.log*
+web/yarn-error.log*
+web/*.pem
+
+# ========================
+# Android / Wear OS (watch/)
+# ========================
+watch/*.iml
+watch/.gradle
+watch/local.properties
+watch/.idea/caches
+watch/.idea/libraries
+watch/.idea/modules.xml
+watch/.idea/workspace.xml
+watch/.idea/navEditor.xml
+watch/.idea/assetWizardSettings.xml
+watch/build
+watch/captures
+watch/.externalNativeBuild
+watch/.cxx
+
+# ========================
+# Common
+# ========================
+.DS_Store
+*.pem
