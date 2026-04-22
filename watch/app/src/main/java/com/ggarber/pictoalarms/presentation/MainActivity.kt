@@ -6,24 +6,36 @@
 package com.ggarber.pictoalarms.presentation
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
@@ -55,7 +67,18 @@ fun WearApp() {
     PictoAlarmsTheme {
         var userId by remember { mutableStateOf("") }
         var submitted by remember { mutableStateOf(false) }
-        var randomImageRes by remember { mutableStateOf(0) }
+        var randomImageRes by remember { mutableIntStateOf(0) }
+
+        val focusManager = LocalFocusManager.current
+        val handleSubmit = {
+            Log.d("PictoAlarms", "handleSubmit called, userId: '$userId'")
+            if (userId.isNotBlank()) {
+                focusManager.clearFocus()
+                val images = listOf(R.drawable.img_1, R.drawable.img_2, R.drawable.img_3)
+                randomImageRes = images.random()
+                submitted = true
+            }
+        }
 
         if (submitted) {
             Box(
@@ -100,28 +123,62 @@ fun WearApp() {
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(horizontal = 16.dp, vertical = 8.dp)
-                                    .transformedHeight(this, transformationSpec),
+                                    .transformedHeight(this, transformationSpec)
+                                    .background(
+                                        color = MaterialTheme.colorScheme.surfaceContainer,
+                                        shape = MaterialTheme.shapes.medium
+                                    )
+                                    .padding(12.dp),
+                                contentAlignment = Alignment.CenterStart
                             ) {
                                 if (userId.isEmpty()) {
-                                    Text("Enter User ID", color = Color.Gray)
+                                    Text(
+                                        text = "Enter User ID",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = Color.Gray
+                                    )
                                 }
                                 BasicTextField(
                                     value = userId,
-                                    onValueChange = { userId = it },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color.White)
+                                    onValueChange = {
+                                        Log.d("PictoAlarms", "onValueChange: '$it'")
+                                        if (it.contains("\n")) {
+                                            Log.d("PictoAlarms", "Newline detected, submitting")
+                                            handleSubmit()
+                                        } else {
+                                            userId = it
+                                        }
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .onKeyEvent {
+                                            if (it.key == Key.Enter || it.key == Key.NumPadEnter) {
+                                                handleSubmit()
+                                                true
+                                            } else {
+                                                false
+                                            }
+                                        },
+                                    textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color.White),
+                                    singleLine = true,
+                                    keyboardOptions = KeyboardOptions(
+                                        imeAction = ImeAction.Done
+                                    ),
+                                    keyboardActions = KeyboardActions(
+                                        onDone = { handleSubmit() },
+                                        onGo = { handleSubmit() },
+                                        onNext = { handleSubmit() },
+                                        onSearch = { handleSubmit() },
+                                        onSend = { handleSubmit() }
+                                    ),
+                                    cursorBrush = SolidColor(Color.White)
                                 )
                             }
                         }
                         item {
                             Button(
-                                onClick = {
-                                    if (userId.isNotBlank()) {
-                                        val images = listOf(R.drawable.img_1, R.drawable.img_2, R.drawable.img_3)
-                                        randomImageRes = images.random()
-                                        submitted = true
-                                    }
-                                },
+                                onClick = handleSubmit,
+                                enabled = userId.isNotBlank(),
                                 modifier = Modifier.fillMaxWidth().transformedHeight(this, transformationSpec),
                                 transformation = SurfaceTransformation(transformationSpec),
                             ) {
