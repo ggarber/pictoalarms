@@ -8,16 +8,27 @@ package com.ggarber.pictoalarms.presentation
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
 import androidx.wear.compose.material3.AppScaffold
 import androidx.wear.compose.material3.Button
-import androidx.wear.compose.material3.ButtonDefaults
-import androidx.wear.compose.material3.EdgeButton
 import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.ScreenScaffold
@@ -34,73 +45,90 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            WearApp("Android")
+            WearApp()
         }
     }
 }
 
 @Composable
-fun WearApp(greetingName: String) {
+fun WearApp() {
     PictoAlarmsTheme {
-        AppScaffold {
-            val listState = rememberTransformingLazyColumnState()
-            val transformationSpec = rememberTransformationSpec()
-            ScreenScaffold(
-                scrollState = listState,
-                edgeButton = {
-                    EdgeButton(
-                        onClick = { /*TODO*/ },
-                        colors =
-                            ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                            ),
-                    ) {
-                        Text("More")
-                    }
-                },
-            ) { contentPadding -> // ScreenScaffold provides default padding; adjust as needed
-                TransformingLazyColumn(contentPadding = contentPadding, state = listState) {
-                    item {
-                        ListHeader(
-                            modifier =
-                                Modifier.fillMaxWidth().transformedHeight(this, transformationSpec),
-                            transformation = SurfaceTransformation(transformationSpec),
-                        ) {
-                            Text(text = stringResource(R.string.hello_world, greetingName))
-                        }
-                    }
-                    item {
-                        Button(
-                            onClick = { /*TODO*/ },
-                            modifier = Modifier.fillMaxWidth()
-                                .transformedHeight(this, transformationSpec),
-                            transformation = SurfaceTransformation(transformationSpec),
-                        ) {
-                            Text("Button A")
-                        }
-                    }
-                    item {
-                        Button(
-                            onClick = { /*TODO*/ },
-                            modifier = Modifier.fillMaxWidth()
-                                .transformedHeight(this, transformationSpec),
-                            transformation = SurfaceTransformation(transformationSpec),
-                        ) {
-                            Text("Button B")
-                        }
-                    }
-                    item {
-                        Button(
-                            onClick = { /*TODO*/ },
-                            modifier = Modifier.fillMaxWidth()
-                                .transformedHeight(this, transformationSpec),
-                            transformation = SurfaceTransformation(transformationSpec),
-                        ) {
-                            Text("Button C")
-                        }
-                    }
+        var userId by remember { mutableStateOf("") }
+        var submitted by remember { mutableStateOf(false) }
+        var randomImageRes by remember { mutableStateOf(0) }
 
+        if (submitted) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(id = randomImageRes),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Fit
+                )
+                Button(
+                    onClick = { submitted = false },
+                    modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 16.dp)
+                ) {
+                    Text("Back")
+                }
+            }
+        } else {
+            AppScaffold {
+                val listState = rememberTransformingLazyColumnState()
+                val transformationSpec = rememberTransformationSpec()
+                ScreenScaffold(
+                    scrollState = listState,
+                ) { contentPadding ->
+                    TransformingLazyColumn(
+                        contentPadding = contentPadding,
+                        state = listState,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        item {
+                            ListHeader(
+                                modifier = Modifier.fillMaxWidth().transformedHeight(this, transformationSpec),
+                                transformation = SurfaceTransformation(transformationSpec),
+                            ) {
+                                Text("User Login")
+                            }
+                        }
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                                    .transformedHeight(this, transformationSpec),
+                            ) {
+                                if (userId.isEmpty()) {
+                                    Text("Enter User ID", color = Color.Gray)
+                                }
+                                BasicTextField(
+                                    value = userId,
+                                    onValueChange = { userId = it },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color.White)
+                                )
+                            }
+                        }
+                        item {
+                            Button(
+                                onClick = {
+                                    if (userId.isNotBlank()) {
+                                        val images = listOf(R.drawable.img_1, R.drawable.img_2, R.drawable.img_3)
+                                        randomImageRes = images.random()
+                                        submitted = true
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth().transformedHeight(this, transformationSpec),
+                                transformation = SurfaceTransformation(transformationSpec),
+                            ) {
+                                Text("Submit")
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -111,5 +139,5 @@ fun WearApp(greetingName: String) {
 @WearPreviewFontScales
 @Composable
 fun DefaultPreview() {
-    WearApp("Preview Android")
+    WearApp()
 }
