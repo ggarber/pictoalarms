@@ -63,10 +63,29 @@ export const invitations = pgTable('invitations', {
   status: varchar('status', { length: 20 }).notNull().default('pending'),
 });
 
+export const devices = pgTable('devices', {
+  id: varchar('id', { length: 50 }).primaryKey(),
+  teamId: integer('team_id')
+    .notNull()
+    .references(() => teams.id),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+export const alarms = pgTable('alarms', {
+  id: serial('id').primaryKey(),
+  deviceId: varchar('device_id', { length: 50 })
+    .notNull()
+    .references(() => devices.id),
+  pictogram: varchar('pictogram', { length: 50 }).notNull(),
+  time: varchar('time', { length: 10 }).notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
 export const teamsRelations = relations(teams, ({ many }) => ({
   teamMembers: many(teamMembers),
   activityLogs: many(activityLogs),
   invitations: many(invitations),
+  devices: many(devices),
 }));
 
 export const usersRelations = relations(users, ({ many }) => ({
@@ -107,6 +126,21 @@ export const activityLogsRelations = relations(activityLogs, ({ one }) => ({
   }),
 }));
 
+export const devicesRelations = relations(devices, ({ one, many }) => ({
+  team: one(teams, {
+    fields: [devices.teamId],
+    references: [teams.id],
+  }),
+  alarms: many(alarms),
+}));
+
+export const alarmsRelations = relations(alarms, ({ one }) => ({
+  device: one(devices, {
+    fields: [alarms.deviceId],
+    references: [devices.id],
+  }),
+}));
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Team = typeof teams.$inferSelect;
@@ -117,6 +151,10 @@ export type ActivityLog = typeof activityLogs.$inferSelect;
 export type NewActivityLog = typeof activityLogs.$inferInsert;
 export type Invitation = typeof invitations.$inferSelect;
 export type NewInvitation = typeof invitations.$inferInsert;
+export type Device = typeof devices.$inferSelect;
+export type NewDevice = typeof devices.$inferInsert;
+export type Alarm = typeof alarms.$inferSelect;
+export type NewAlarm = typeof alarms.$inferInsert;
 export type TeamDataWithMembers = Team & {
   teamMembers: (TeamMember & {
     user: Pick<User, 'id' | 'name' | 'email'>;
