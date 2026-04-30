@@ -18,15 +18,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.input.TextFieldLineLimits
-import androidx.compose.foundation.text.input.clearText
-import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -41,10 +38,8 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.asFlow
@@ -67,8 +62,6 @@ import androidx.work.workDataOf
 import com.ggarber.pictoalarms.R
 import com.ggarber.pictoalarms.data.ApiWorker
 import com.ggarber.pictoalarms.presentation.theme.PictoAlarmsTheme
-import kotlinx.coroutines.delay
-import kotlin.time.Duration.Companion.minutes
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -82,7 +75,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun WearApp() {
     PictoAlarmsTheme {
-        val userIdState = rememberTextFieldState()
+        var deviceId by remember { mutableStateOf("") }
         var submitted by remember { mutableStateOf(false) }
         var nextAlarmTime by remember { mutableStateOf<String?>(null) }
         var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -103,7 +96,7 @@ fun WearApp() {
                     errorMessage = null
                 }
                 androidx.work.WorkInfo.State.FAILED -> {
-                    errorMessage = "Invalid User ID. Please try again."
+                    errorMessage = "Invalid Device ID. Please try again."
                     submitted = false
                 }
                 else -> {}
@@ -113,30 +106,26 @@ fun WearApp() {
         LaunchedEffect(submitted) {
             if (submitted) {
                 vibrator?.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE))
-                delay(30.minutes)
-                submitted = false
-                userIdState.clearText()
-                nextAlarmTime = null
             } else {
                 focusRequester.requestFocus()
             }
         }
 
         fun handleSubmit() {
-            val idToSubmit = userIdState.text.toString().trim()
-            Log.d("PictoAlarms", "handleSubmit called, id: '$idToSubmit'")
-            if (idToSubmit.isNotBlank()) {
+            val deviceIdToSubmit = deviceId.trim()
+            if (deviceIdToSubmit.isNotBlank()) {
+                Log.d("PictoAlarms", "handleSubmit called, id: '$deviceIdToSubmit', length: ${deviceIdToSubmit.length}")
                 focusManager.clearFocus()
                 errorMessage = null
                 
                 // Save deviceId to SharedPreferences
                 context.getSharedPreferences("picto_alarms", Context.MODE_PRIVATE)
                     .edit()
-                    .putString("deviceId", idToSubmit)
+                    .putString("deviceId", deviceIdToSubmit)
                     .apply()
 
                 val workRequest = OneTimeWorkRequestBuilder<ApiWorker>()
-                    .setInputData(workDataOf("deviceId" to idToSubmit))
+                    .setInputData(workDataOf("deviceId" to deviceIdToSubmit))
                     .build()
                 workManager.enqueue(workRequest)
                 workId = workRequest.id
@@ -170,7 +159,7 @@ fun WearApp() {
                 Button(
                     onClick = {
                         submitted = false
-                        userIdState.clearText()
+                        deviceId = ""
                         nextAlarmTime = null
                     },
                     modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 16.dp)
@@ -195,7 +184,7 @@ fun WearApp() {
                                 modifier = Modifier.fillMaxWidth().transformedHeight(this, transformationSpec),
                                 transformation = SurfaceTransformation(transformationSpec),
                             ) {
-                                Text("User Login")
+                                Text("Device ID Login")
                             }
                         }
                         if (errorMessage != null) {
@@ -222,21 +211,25 @@ fun WearApp() {
                                     .padding(12.dp),
                                 contentAlignment = Alignment.CenterStart
                             ) {
-                                if (userIdState.text.isEmpty()) {
+                                if (deviceId.isEmpty()) {
                                     Text(
-                                        text = "Enter User ID",
+                                        text = "Enter Device ID",
                                         style = MaterialTheme.typography.bodyLarge,
                                         color = Color.Gray
                                     )
                                 }
                                 BasicTextField(
-                                    state = userIdState,
+                                    value = deviceId,
+                                    onValueChange = { 
+                                        deviceId = it
+                                        Log.d("PictoAlarms", "deviceId changed: '$it'")
+                                    },
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .focusRequester(focusRequester)
                                         .onKeyEvent {
-                                            if ((it.key == Key.Enter) || (it.key == Key.NumPadEnter)) {
-                                                if (it.type == KeyEventType.KeyUp) {
+                                            if (it.key == Key.Enter && it.type == KeyEventType.KeyUp) {
+                                                if (deviceId.isNotBlank()) {
                                                     handleSubmit()
                                                 }
                                                 true
@@ -245,11 +238,17 @@ fun WearApp() {
                                             }
                                         },
                                     textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color.White),
-                                    lineLimits = TextFieldLineLimits.SingleLine,
+                                    singleLine = true,
                                     keyboardOptions = KeyboardOptions(
                                         imeAction = ImeAction.Done
                                     ),
-                                    onKeyboardAction = { handleSubmit() },
+                                    keyboardActions = KeyboardActions(
+                                        onDone = { 
+                                            if (deviceId.isNotBlank()) {
+                                                handleSubmit()
+                                            }
+                                        }
+                                    ),
                                     cursorBrush = SolidColor(Color.White)
                                 )
                             }
@@ -257,7 +256,7 @@ fun WearApp() {
                         item {
                             Button(
                                 onClick = { handleSubmit() },
-                                enabled = userIdState.text.isNotBlank(),
+                                enabled = deviceId.isNotBlank(),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(horizontal = 16.dp, vertical = 8.dp)

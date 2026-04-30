@@ -8,7 +8,7 @@ import { eq, and } from 'drizzle-orm';
 
 export async function createAlarm(formData: FormData) {
   const team = await getTeamForUser();
-  if (!team) return { error: 'Not authenticated' };
+  if (!team) return;
 
   const deviceId = formData.get('deviceId') as string;
   const time = formData.get('time') as string;
@@ -17,7 +17,7 @@ export async function createAlarm(formData: FormData) {
   const device = await db.query.devices.findFirst({
     where: and(eq(devices.id, deviceId), eq(devices.teamId, team.id))
   });
-  if (!device) return { error: 'Device not found or not owned by team' };
+  if (!device) return;
 
   try {
     await db.insert(alarms).values({
@@ -26,15 +26,14 @@ export async function createAlarm(formData: FormData) {
       pictogram
     });
     revalidatePath(`/dashboard/alarms`);
-    return { success: 'Alarm created' };
   } catch(e) {
-    return { error: 'Failed to create alarm' };
+    // Handle error
   }
 }
 
 export async function deleteAlarm(formData: FormData) {
   const team = await getTeamForUser();
-  if (!team) return { error: 'Not authenticated' };
+  if (!team) return;
   
   const alarmIdStr = formData.get('alarmId') as string;
   const alarmId = parseInt(alarmIdStr, 10);
@@ -45,21 +44,20 @@ export async function deleteAlarm(formData: FormData) {
   });
 
   if (!alarm || alarm.device.teamId !== team.id) {
-    return { error: 'Not allowed' };
+    return;
   }
 
   try {
     await db.delete(alarms).where(eq(alarms.id, alarmId));
     revalidatePath('/dashboard/alarms');
-    return { success: 'Alarm deleted' };
   } catch(e) {
-    return { error: 'Failed to delete alarm' };
+    // Handle error
   }
 }
 
 export async function updateAlarm(formData: FormData) {
   const team = await getTeamForUser();
-  if (!team) return { error: 'Not authenticated' };
+  if (!team) return;
 
   const alarmId = parseInt(formData.get('alarmId') as string, 10);
   const time = formData.get('time') as string;
@@ -71,14 +69,14 @@ export async function updateAlarm(formData: FormData) {
   });
 
   if (!alarm || alarm.device.teamId !== team.id) {
-    return { error: 'Not allowed' };
+    return;
   }
 
   try {
     await db.update(alarms).set({ time, pictogram }).where(eq(alarms.id, alarmId));
     revalidatePath('/dashboard/alarms');
-    return { success: 'Alarm updated' };
   } catch(e) {
-    return { error: 'Failed to update alarm' };
+    // Handle error
   }
 }
+

@@ -8,14 +8,10 @@ import { eq, and } from 'drizzle-orm';
 
 export async function createDevice(formData: FormData) {
   const team = await getTeamForUser();
-  if (!team) {
-    return { error: 'User is not part of a team.' };
-  }
+  if (!team) return;
 
   const deviceId = formData.get('deviceId') as string;
-  if (!deviceId || deviceId.trim() === '') {
-    return { error: 'Device ID is required.' };
-  }
+  if (!deviceId || deviceId.trim() === '') return;
 
   try {
     await db.insert(devices).values({
@@ -23,24 +19,21 @@ export async function createDevice(formData: FormData) {
       teamId: team.id,
     });
     revalidatePath('/dashboard/devices');
-    return { success: 'Device created successfully.' };
   } catch (error) {
-    return { error: 'Failed to create device. ID might already exist.' };
+    // Handle error
   }
 }
 
 export async function deleteDevice(formData: FormData) {
   const team = await getTeamForUser();
-  if (!team) {
-    return { error: 'User is not part of a team.' };
-  }
+  if (!team) return;
   const deviceId = formData.get('deviceId') as string;
 
   try {
     await db.delete(devices).where(and(eq(devices.id, deviceId), eq(devices.teamId, team.id)));
     revalidatePath('/dashboard/devices');
-    return { success: 'Device deleted successfully.' };
   } catch (error) {
-    return { error: 'Failed to delete device.' };
+    // Handle error
   }
 }
+
