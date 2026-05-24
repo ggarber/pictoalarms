@@ -18,8 +18,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.clearText
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -33,13 +35,9 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onKeyEvent
-import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.asFlow
@@ -59,7 +57,6 @@ import androidx.wear.compose.ui.tooling.preview.WearPreviewFontScales
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
-import com.ggarber.pictoalarms.R
 import com.ggarber.pictoalarms.data.ApiWorker
 import com.ggarber.pictoalarms.presentation.theme.PictoAlarmsTheme
 
@@ -75,7 +72,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun WearApp() {
     PictoAlarmsTheme {
-        var deviceId by remember { mutableStateOf("") }
+        val deviceId = rememberTextFieldState("")
         var submitted by remember { mutableStateOf(false) }
         var nextAlarmTime by remember { mutableStateOf<String?>(null) }
         var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -83,13 +80,18 @@ fun WearApp() {
         val context = LocalContext.current
         val vibrator = remember { context.getSystemService(Vibrator::class.java) }
         val focusManager = LocalFocusManager.current
+        val keyboardController = LocalSoftwareKeyboardController.current
         val focusRequester = remember { FocusRequester() }
 
         val workManager = remember { WorkManager.getInstance(context) }
         var workId by remember { mutableStateOf<java.util.UUID?>(null) }
-        val workInfo by (workId?.let { workManager.getWorkInfoByIdLiveData(it).asFlow() } ?: kotlinx.coroutines.flow.flowOf(null)).collectAsState(null)
+        val workInfo by remember(workId) {
+            workId?.let { workManager.getWorkInfoByIdLiveData(it).asFlow() } 
+                ?: kotlinx.coroutines.flow.flowOf(null)
+        }.collectAsState(null)
 
         LaunchedEffect(workInfo) {
+            Log.d("PictoAlarms", "workInfo updated: state=${workInfo?.state}")
             when (workInfo?.state) {
                 androidx.work.WorkInfo.State.SUCCEEDED -> {
                     nextAlarmTime = workInfo?.outputData?.getString("nextAlarm")
@@ -106,16 +108,20 @@ fun WearApp() {
         LaunchedEffect(submitted) {
             if (submitted) {
                 vibrator?.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE))
-            } else {
-                focusRequester.requestFocus()
             }
         }
 
+        LaunchedEffect(deviceId.text) {
+            Log.d("PictoAlarms", "deviceId text updated: '${deviceId.text}'")
+        }
+
         fun handleSubmit() {
-            val deviceIdToSubmit = deviceId.trim()
+            Log.d("PictoAlarms", "handleSubmit entered, deviceId: '${deviceId.text}'")
+            val deviceIdToSubmit = deviceId.text.toString().trim()
             if (deviceIdToSubmit.isNotBlank()) {
                 Log.d("PictoAlarms", "handleSubmit called, id: '$deviceIdToSubmit', length: ${deviceIdToSubmit.length}")
                 focusManager.clearFocus()
+                keyboardController?.hide()
                 errorMessage = null
                 
                 // Save deviceId to SharedPreferences
@@ -131,6 +137,9 @@ fun WearApp() {
                 workId = workRequest.id
 
                 submitted = true
+                Log.d("PictoAlarms", "handleSubmit finished, submitted set to true")
+            } else {
+                Log.d("PictoAlarms", "handleSubmit skipped, deviceId is blank")
             }
         }
 
@@ -159,7 +168,7 @@ fun WearApp() {
                 Button(
                     onClick = {
                         submitted = false
-                        deviceId = ""
+                        deviceId.clearText()
                         nextAlarmTime = null
                     },
                     modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 16.dp)
@@ -199,7 +208,8 @@ fun WearApp() {
                             }
                         }
                         item {
-                            Box(
+                            BasicTextField(
+                                state = deviceId,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -208,55 +218,42 @@ fun WearApp() {
                                         color = MaterialTheme.colorScheme.surfaceContainer,
                                         shape = MaterialTheme.shapes.medium
                                     )
-                                    .padding(12.dp),
-                                contentAlignment = Alignment.CenterStart
-                            ) {
-                                if (deviceId.isEmpty()) {
-                                    Text(
-                                        text = "Enter Device ID",
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = Color.Gray
-                                    )
-                                }
-                                BasicTextField(
-                                    value = deviceId,
-                                    onValueChange = { 
-                                        deviceId = it
-                                        Log.d("PictoAlarms", "deviceId changed: '$it'")
-                                    },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .focusRequester(focusRequester)
-                                        .onKeyEvent {
-                                            if (it.key == Key.Enter && it.type == KeyEventType.KeyUp) {
-                                                if (deviceId.isNotBlank()) {
-                                                    handleSubmit()
-                                                }
-                                                true
-                                            } else {
-                                                false
-                                            }
-                                        },
-                                    textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color.White),
-                                    singleLine = true,
-                                    keyboardOptions = KeyboardOptions(
-                                        imeAction = ImeAction.Done
-                                    ),
-                                    keyboardActions = KeyboardActions(
-                                        onDone = { 
-                                            if (deviceId.isNotBlank()) {
-                                                handleSubmit()
-                                            }
+                                    .focusRequester(focusRequester),
+                                textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color.White),
+                                lineLimits = TextFieldLineLimits.SingleLine,
+                                keyboardOptions = KeyboardOptions(
+                                    imeAction = ImeAction.Done
+                                ),
+                                onKeyboardAction = {
+                                    Log.d("PictoAlarms", "onKeyboardAction triggered, deviceId: '${deviceId.text}'")
+                                    if (deviceId.text.isNotBlank()) {
+                                        handleSubmit()
+                                    }
+                                },
+                                cursorBrush = SolidColor(Color.White),
+                                decorator = { innerTextField ->
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(12.dp),
+                                        contentAlignment = Alignment.CenterStart
+                                    ) {
+                                        if (deviceId.text.isEmpty()) {
+                                            Text(
+                                                text = "Enter Device ID",
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                color = Color.Gray
+                                            )
                                         }
-                                    ),
-                                    cursorBrush = SolidColor(Color.White)
-                                )
-                            }
+                                        innerTextField()
+                                    }
+                                }
+                            )
                         }
                         item {
                             Button(
                                 onClick = { handleSubmit() },
-                                enabled = deviceId.isNotBlank(),
+                                enabled = deviceId.text.isNotBlank(),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(horizontal = 16.dp, vertical = 8.dp)

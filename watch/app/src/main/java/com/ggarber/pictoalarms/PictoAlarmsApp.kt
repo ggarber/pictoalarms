@@ -13,7 +13,9 @@ class PictoAlarmsApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        android.util.Log.d("PictoAlarmsApp", "Application onCreate")
         scheduleApiFetch()
+        com.ggarber.pictoalarms.data.AlarmScheduler.scheduleNextAlarm(this)
     }
 
     private fun scheduleApiFetch() {
