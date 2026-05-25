@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { createDevice, deleteDevice } from './actions';
+import { Plus, Trash2 } from 'lucide-react';
 
 export default async function DevicesPage() {
   const team = await getTeamForUser();
@@ -28,12 +29,15 @@ export default async function DevicesPage() {
           <CardTitle>Register New Device</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={createDevice} className="flex gap-4 items-end">
-            <div className="flex-1">
-              <Label htmlFor="deviceId">Alphanumeric Device ID</Label>
-              <Input id="deviceId" name="deviceId" required placeholder="e.g. A1B2C3D4" />
+          <form action={createDevice} className="flex gap-6 items-center flex-wrap">
+            <div className="flex items-center gap-2">
+              <Label htmlFor="deviceId" className="text-sm font-medium whitespace-nowrap">Alphanumeric Device ID</Label>
+              <Input id="deviceId" name="deviceId" required placeholder="e.g. A1B2C3D4" className="w-[200px]" />
             </div>
-            <Button type="submit">Add Device</Button>
+            <Button type="submit" size="icon" title="Add Device">
+              <Plus className="h-4 w-4" />
+              <span className="sr-only">Add Device</span>
+            </Button>
           </form>
         </CardContent>
       </Card>
@@ -48,11 +52,14 @@ export default async function DevicesPage() {
           ) : (
             <ul className="space-y-4">
               {teamDevices.map((device) => (
-                <li key={device.id} className="flex justify-between items-center border-b pb-2">
+                <li key={device.id} className="flex justify-between items-center">
                   <div className="font-medium">{device.id}</div>
                   <form action={deleteDevice}>
                     <input type="hidden" name="deviceId" value={device.id} />
-                    <Button variant="destructive" size="sm" type="submit">Remove</Button>
+                    <Button variant="destructive" size="icon" type="submit" title="Remove Device">
+                      <Trash2 className="h-4 w-4" />
+                      <span className="sr-only">Remove</span>
+                    </Button>
                   </form>
                 </li>
               ))}

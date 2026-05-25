@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { createAlarm, deleteAlarm, updateAlarm } from './actions';
 import { redirect } from 'next/navigation';
 import { DeviceSelector } from './device-selector';
+import { Plus, Save, Trash2 } from 'lucide-react';
 
 export default async function AlarmsPage({ searchParams }: { searchParams: Promise<{ deviceId?: string }> }) {
   const params = await searchParams;
@@ -50,25 +51,28 @@ export default async function AlarmsPage({ searchParams }: { searchParams: Promi
           <CardTitle>Add New Alarm for {selectedDeviceId}</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={createAlarm} className="flex gap-4 items-end flex-wrap">
+          <form action={createAlarm} className="flex gap-6 items-center flex-wrap">
             <input type="hidden" name="deviceId" value={selectedDeviceId} />
-            <div className="flex-1 min-w-[150px]">
-              <Label htmlFor="time">Time</Label>
-              <Input id="time" name="time" type="time" required />
+            <div className="flex items-center gap-2">
+              <Label htmlFor="time" className="text-sm font-medium whitespace-nowrap">Time</Label>
+              <Input id="time" name="time" type="time" className="w-[120px]" required />
             </div>
-            <div className="flex-1 min-w-[150px]">
-              <Label htmlFor="pictogram">Pictogram</Label>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="pictogram" className="text-sm font-medium whitespace-nowrap">Pictogram</Label>
               <select 
                 id="pictogram" 
                 name="pictogram" 
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                className="flex h-10 w-[150px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
               >
                 <option value="BREAKFAST">Breakfast</option>
                 <option value="BALL">Ball</option>
                 <option value="PILL">Pill</option>
               </select>
             </div>
-            <Button type="submit">Add Alarm</Button>
+            <Button type="submit" size="icon" title="Add Alarm">
+              <Plus className="h-4 w-4" />
+              <span className="sr-only">Add Alarm</span>
+            </Button>
           </form>
         </CardContent>
       </Card>
@@ -81,22 +85,22 @@ export default async function AlarmsPage({ searchParams }: { searchParams: Promi
           {deviceAlarms.length === 0 ? (
             <p className="text-muted-foreground">No alarms for this device.</p>
           ) : (
-            <div className="divide-y divide-gray-100 dark:divide-gray-800 space-y-4">
-              {deviceAlarms.map((alarm, index) => (
-                <div key={alarm.id} className={index > 0 ? "pt-4" : ""}>
-                  <form className="flex gap-4 items-end flex-wrap">
+            <div className="space-y-4">
+              {deviceAlarms.map((alarm) => (
+                <div key={alarm.id}>
+                  <form className="flex gap-6 items-center flex-wrap">
                     <input type="hidden" name="alarmId" value={alarm.id} />
-                    <div className="flex-1 min-w-[150px]">
-                      <Label htmlFor={`time-${alarm.id}`}>Time</Label>
-                      <Input id={`time-${alarm.id}`} name="time" type="time" defaultValue={alarm.time} required />
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor={`time-${alarm.id}`} className="text-sm font-medium whitespace-nowrap">Time</Label>
+                      <Input id={`time-${alarm.id}`} name="time" type="time" defaultValue={alarm.time} className="w-[120px]" required />
                     </div>
-                    <div className="flex-1 min-w-[150px]">
-                      <Label htmlFor={`picto-${alarm.id}`}>Pictogram</Label>
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor={`picto-${alarm.id}`} className="text-sm font-medium whitespace-nowrap">Pictogram</Label>
                       <select 
                         id={`picto-${alarm.id}`}
                         name="pictogram" 
                         defaultValue={alarm.pictogram}
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                        className="flex h-10 w-[150px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
                       >
                         <option value="BREAKFAST">Breakfast</option>
                         <option value="BALL">Ball</option>
@@ -104,8 +108,14 @@ export default async function AlarmsPage({ searchParams }: { searchParams: Promi
                       </select>
                     </div>
                     <div className="flex gap-2">
-                      <Button type="submit" formAction={updateAlarm} variant="secondary">Update</Button>
-                      <Button type="submit" formAction={deleteAlarm} variant="destructive">Remove</Button>
+                      <Button type="submit" formAction={updateAlarm} variant="secondary" size="icon" title="Update Alarm">
+                        <Save className="h-4 w-4" />
+                        <span className="sr-only">Update</span>
+                      </Button>
+                      <Button type="submit" formAction={deleteAlarm} variant="destructive" size="icon" title="Remove Alarm">
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Remove</span>
+                      </Button>
                     </div>
                   </form>
                 </div>
