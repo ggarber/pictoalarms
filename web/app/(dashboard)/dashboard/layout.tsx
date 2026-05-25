@@ -17,8 +17,8 @@ export default function DashboardLayout({
   const navItems = [
     { href: '/dashboard', icon: Users, label: 'Team' },
     { href: '/dashboard/general', icon: Settings, label: 'General' },
-    { href: '/dashboard/activity', icon: Activity, label: 'Activity' },
-    { href: '/dashboard/security', icon: Shield, label: 'Security' },
+    // { href: '/dashboard/activity', icon: Activity, label: 'Activity' },
+    // { href: '/dashboard/security', icon: Shield, label: 'Security' },
     { type: 'divider' },
     { href: '/dashboard/devices', icon: Smartphone, label: 'Devices' },
     { href: '/dashboard/alarms', icon: BellRing, label: 'Alarms' }

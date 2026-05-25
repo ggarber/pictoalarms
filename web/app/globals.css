@@ -272,4 +272,7 @@
   body {
     @apply bg-background text-foreground;
   }
+  button, select, [role="button"] {
+    cursor: pointer;
+  }
 }

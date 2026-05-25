@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { createAlarm, deleteAlarm, updateAlarm } from './actions';
 import { redirect } from 'next/navigation';
+import { DeviceSelector } from './device-selector';
 
 export default async function AlarmsPage({ searchParams }: { searchParams: Promise<{ deviceId?: string }> }) {
   const params = await searchParams;
@@ -39,31 +40,10 @@ export default async function AlarmsPage({ searchParams }: { searchParams: Promi
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-medium">Alarms</h1>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Select Device</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form method="GET" action="/dashboard/alarms" className="flex gap-4 items-end">
-            <div className="flex-1">
-              <Label htmlFor="deviceId">Device</Label>
-              <select 
-                id="deviceId" 
-                name="deviceId" 
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                defaultValue={selectedDeviceId}
-              >
-                {teamDevices.map(d => (
-                  <option key={d.id} value={d.id}>{d.id}</option>
-                ))}
-              </select>
-            </div>
-            <Button type="submit" variant="secondary">View Alarms</Button>
-          </form>
-        </CardContent>
-      </Card>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h1 className="text-2xl font-medium">Alarms</h1>
+        <DeviceSelector devices={teamDevices} selectedDeviceId={selectedDeviceId} />
+      </div>
 
       <Card>
         <CardHeader>
@@ -81,7 +61,7 @@ export default async function AlarmsPage({ searchParams }: { searchParams: Promi
               <select 
                 id="pictogram" 
                 name="pictogram" 
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
               >
                 <option value="BREAKFAST">Breakfast</option>
                 <option value="BALL">Ball</option>
@@ -93,15 +73,17 @@ export default async function AlarmsPage({ searchParams }: { searchParams: Promi
         </CardContent>
       </Card>
 
-      <div className="space-y-4">
-        <h2 className="text-xl font-medium">Current Alarms</h2>
-        {deviceAlarms.length === 0 ? (
-          <p className="text-muted-foreground">No alarms for this device.</p>
-        ) : (
-          <div className="grid gap-4">
-            {deviceAlarms.map((alarm) => (
-              <Card key={alarm.id}>
-                <CardContent className="p-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Current Alarms</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {deviceAlarms.length === 0 ? (
+            <p className="text-muted-foreground">No alarms for this device.</p>
+          ) : (
+            <div className="divide-y divide-gray-100 dark:divide-gray-800 space-y-4">
+              {deviceAlarms.map((alarm, index) => (
+                <div key={alarm.id} className={index > 0 ? "pt-4" : ""}>
                   <form className="flex gap-4 items-end flex-wrap">
                     <input type="hidden" name="alarmId" value={alarm.id} />
                     <div className="flex-1 min-w-[150px]">
@@ -114,7 +96,7 @@ export default async function AlarmsPage({ searchParams }: { searchParams: Promi
                         id={`picto-${alarm.id}`}
                         name="pictogram" 
                         defaultValue={alarm.pictogram}
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
                       >
                         <option value="BREAKFAST">Breakfast</option>
                         <option value="BALL">Ball</option>
@@ -126,12 +108,12 @@ export default async function AlarmsPage({ searchParams }: { searchParams: Promi
                       <Button type="submit" formAction={deleteAlarm} variant="destructive">Remove</Button>
                     </div>
                   </form>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
