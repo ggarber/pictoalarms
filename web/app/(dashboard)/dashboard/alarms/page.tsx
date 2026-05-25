@@ -51,25 +51,25 @@ export default async function AlarmsPage({ searchParams }: { searchParams: Promi
           <CardTitle>Add New Alarm for {selectedDeviceId}</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={createAlarm} className="flex gap-6 items-center flex-wrap">
+          <form action={createAlarm} className="flex gap-6 items-center flex-wrap sm:flex-nowrap w-full">
             <input type="hidden" name="deviceId" value={selectedDeviceId} />
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-grow min-w-[120px]">
               <Label htmlFor="time" className="text-sm font-medium whitespace-nowrap">Time</Label>
-              <Input id="time" name="time" type="time" className="w-[120px]" required />
+              <Input id="time" name="time" type="time" className="w-full" required />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-grow min-w-[150px]">
               <Label htmlFor="pictogram" className="text-sm font-medium whitespace-nowrap">Pictogram</Label>
               <select 
                 id="pictogram" 
                 name="pictogram" 
-                className="flex h-10 w-[150px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
               >
                 <option value="BREAKFAST">Breakfast</option>
                 <option value="BALL">Ball</option>
                 <option value="PILL">Pill</option>
               </select>
             </div>
-            <Button type="submit" size="icon" title="Add Alarm">
+            <Button type="submit" size="icon" title="Add Alarm" className="shrink-0">
               <Plus className="h-4 w-4" />
               <span className="sr-only">Add Alarm</span>
             </Button>
@@ -88,26 +88,26 @@ export default async function AlarmsPage({ searchParams }: { searchParams: Promi
             <div className="space-y-4">
               {deviceAlarms.map((alarm) => (
                 <div key={alarm.id}>
-                  <form className="flex gap-6 items-center flex-wrap">
+                  <form className="flex gap-6 items-center flex-wrap sm:flex-nowrap w-full">
                     <input type="hidden" name="alarmId" value={alarm.id} />
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-grow min-w-[120px]">
                       <Label htmlFor={`time-${alarm.id}`} className="text-sm font-medium whitespace-nowrap">Time</Label>
-                      <Input id={`time-${alarm.id}`} name="time" type="time" defaultValue={alarm.time} className="w-[120px]" required />
+                      <Input id={`time-${alarm.id}`} name="time" type="time" defaultValue={alarm.time} className="w-full" required />
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-grow min-w-[150px]">
                       <Label htmlFor={`picto-${alarm.id}`} className="text-sm font-medium whitespace-nowrap">Pictogram</Label>
                       <select 
                         id={`picto-${alarm.id}`}
                         name="pictogram" 
                         defaultValue={alarm.pictogram}
-                        className="flex h-10 w-[150px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
                       >
                         <option value="BREAKFAST">Breakfast</option>
                         <option value="BALL">Ball</option>
                         <option value="PILL">Pill</option>
                       </select>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 shrink-0">
                       <Button type="submit" formAction={updateAlarm} variant="secondary" size="icon" title="Update Alarm">
                         <Save className="h-4 w-4" />
                         <span className="sr-only">Update</span>
